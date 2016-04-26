@@ -7,14 +7,14 @@
 //byte Ethernet::buffer[700];
 //static uint32_t timer;
 
-website = "www.antonfranzluebbers.me";
-serial = "HC-SR04-1";
+website = "www.antonfranzluebbers.me"
+serial = "HC-SR04-1"
 
 // TODO set to pi pins
-sonicTrig = 3;
-sonicEcho = 2;
+sonicTrig = 3
+sonicEcho = 2
 
-lastTransmittedData = 10000;
+lastTransmittedData = 10000
 
 microsecondsToCentimeters(duration)
 readUltraSonic()
@@ -24,51 +24,50 @@ sendData(data)
 
 def readUltraSonic():
   digitalWrite(sonicTrig, LOW)
-  delayMicroseconds(2);
-  digitalWrite(sonicTrig, HIGH);
-  delayMicroseconds(5);
-  digitalWrite(sonicTrig, LOW);
+  delayMicroseconds(2)
+  digitalWrite(sonicTrig, HIGH)
+  delayMicroseconds(5)
+  digitalWrite(sonicTrig, LOW)
 
-  long duration = pulseIn(sonicEcho, HIGH);
-  return microsecondsToCentimeters(duration);
-}
+  long duration = pulseIn(sonicEcho, HIGH)
+  return microsecondsToCentimeters(duration)
 
-long microsecondsToCentimeters(long duration) {
-  return duration / 29 / 2;
-}
+
+long microsecondsToCentimeters(long duration):
+  return duration / 29 / 2
+
 
 
 // called when the client request is complete
-static void my_callback (byte status, word off, word len) {
+static void my_callback (byte status, word off, word len):
   Serial.println(">>>");
   Ethernet::buffer[off+300] = 0;
   Serial.print((const char*) Ethernet::buffer + off);
   Serial.println("...");
-}
 
-void setup () {
+void setup ():
   pinMode(sonicTrig, OUTPUT);
   pinMode(sonicEcho, INPUT);
   
   Serial.begin(57600);
   Serial.println(F("\n[webClient]"));
 
-  if (ether.begin(sizeof Ethernet::buffer, mymac) == 0) 
+  if (ether.begin(sizeof Ethernet::buffer, mymac) == 0):
     Serial.println(F("Failed to access Ethernet controller"));
-  if (!ether.dhcpSetup())
+  if (!ether.dhcpSetup()):
     Serial.println(F("DHCP failed"));
 
   ether.printIp("IP:  ", ether.myip);
   ether.printIp("GW:  ", ether.gwip);  
   ether.printIp("DNS: ", ether.dnsip);  
 
-  if (!ether.dnsLookup(website))
+  if (!ether.dnsLookup(website)):
     Serial.println("DNS failed");
     
   ether.printIp("SRV: ", ether.hisip);
-}
 
-void sendData(float data) {  
+
+void sendData(float data):
   Serial.println();
   Serial.println("<<< REQ ");
   //String reqData = "serial=";
@@ -87,30 +86,24 @@ void sendData(float data) {
   //const char* reqConstCharData = reqCharData;
   //reqData.toCharArray(reqCharData, 64);
   //Serial.println(reqCharData);
-  if (data > 200) {
+  if (data > 200):
     ether.browseUrl(PSTR("/add_data.php?"), "serial=HC-SR04-1&distance=400" , website, my_callback);
-  } else {
+  else:
     ether.browseUrl(PSTR("/add_data.php?"), "serial=HC-SR04-1&distance=100" , website, my_callback);
-  }
   
   //delete[] reqCharData;
   //delete[] reqConstCharData;
-}
 
-void loop () {
-  if (timer < millis()) {
+void loop ():
+  if (timer < millis()):
     long sum = 0;
-    for (int i=0; i<avgArrayLength; ++i) {
+    for (int i=0; i<avgArrayLength; ++i):
       sum += readUltraSonic();
       delay(500);
-    }
     float data = (float)sum/avgArrayLength;
-    if (lastTransmittedData - data > 10 || data - lastTransmittedData > 10) {
+    if (lastTransmittedData - data > 10 || data - lastTransmittedData > 10):
       sendData(data);
       Serial.println(data);
       lastTransmittedData = data;
-    }
     timer = millis() + 5000;
-  }
   ether.packetLoop(ether.packetReceive());
-}
